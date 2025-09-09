@@ -217,3 +217,5 @@ plt.title("Loss During Training")
 plt.savefig(MODEL_FILE_NAME + "Loss.png")
 
 print("DONE!!!")
+
+env.close()
