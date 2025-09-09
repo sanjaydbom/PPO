@@ -1,0 +1,31 @@
+env_name: "CartPole-v1"
+
+#Architecture Parameters
+actor_hidden: [64,64]
+std_clamp_min: Null
+std_clamp_max: Null
+
+critic_hidden: [64,64]
+
+actor_lr: 3e-4
+critic_lr: 3e-4
+
+#Training Parameters
+GAMMA: 0.99
+LAMBDA: 0.95
+
+EPSILON: 0.2
+C1: 0.5
+C2: 0.01
+
+NUM_EPOCHS: 1000
+BATCH_SIZE: 32
+NUM_BATCHES: 10
+TRAINING_MIN_SIZE: 1024
+
+#LOGGING PARAMETERS
+LOGGING_FREQ: 10
+SLIDING_WINDOW_SIZE: 50
+MODEL_FILE_NAME: "./CartPole/CartPole"
+
+
