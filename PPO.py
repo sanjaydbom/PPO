@@ -21,7 +21,8 @@ if discrete:
     action_range = action_dim
 else:
     action_dim = env.action_space.shape[0]
-    action_range = env.action_space.high
+    action_range = torch.tensor(env.action_space.high)
+
 actor, critic = get_networks(obs_dim, action_dim, hyperparams['actor_hidden'], hyperparams['critic_hidden'], hyperparams['std_clamp_min'], hyperparams['std_clamp_max'], discrete, action_range)
 actor_optim = optim.Adam(actor.parameters(), float(hyperparams['actor_lr']))
 critic_optim = optim.Adam(critic.parameters(), float(hyperparams['critic_lr']))
@@ -74,7 +75,7 @@ for epoch in range(NUM_EPOCHS):
             next_state = torch.tensor(next_state, dtype = torch.float32)
 
             state_array.append(state[0])
-            action_array.append(action)
+            action_array.append(action[0])
             reward_array.append(reward)
             next_state_array.append(next_state)
             not_terminated_array.append(0 if terminated else 1)
@@ -106,16 +107,13 @@ for epoch in range(NUM_EPOCHS):
         print(state_value_array.shape)'''
 
         with torch.no_grad():
-            if not_terminated_array[-1]:
-                next_state_value = critic(next_state_array[-1])
-            else:
-                next_state_value = torch.tensor(0)
+            next_state_value_array = critic(next_state_array)
 
             advantage_array = torch.zeros_like(reward_array)
-            advantage_array[-1] = reward_array[-1] + GAMMA * next_state_value - state_value_array[-1]
+            advantage_array[-1] = reward_array[-1] + GAMMA * next_state_value_array[-1] * not_terminated_array[-1] - state_value_array[-1]
 
             for i in reversed(range(len(reward_array)-1)):
-                TD_error = reward_array[i] - state_value_array[i] + GAMMA * state_value_array[i+1] * not_terminated_array[i]
+                TD_error = reward_array[i] - state_value_array[i] + GAMMA * next_state_value_array[i] * not_terminated_array[i]
                 advantage_array[i] = TD_error + GAMMA * LAMBDA * advantage_array[i+1] * not_terminated_array[i]
 
             target_array = advantage_array + state_value_array
@@ -133,10 +131,10 @@ for epoch in range(NUM_EPOCHS):
             for k in range(0,len(indicies), BATCH_SIZE):
                 index = indicies[k:k + BATCH_SIZE]
                 
-                batch_log_probs = log_probs_array[index].squeeze()
+                batch_log_probs = log_probs_array[index]
                 batch_advantage = advantage_array[index]
                 batch_target = target_array[index]
-                batch_actions = action_array[index].squeeze()
+                batch_actions = action_array[index]
 
                 batch_states = state_array[index]
 
@@ -147,6 +145,12 @@ for epoch in range(NUM_EPOCHS):
                 l_clip = torch.minimum(ratio * batch_advantage.detach(), torch.clamp(ratio, 1 - EPSILON, 1 + EPSILON) * batch_advantage.detach()).mean()
                 l_s = new_entropy.mean()
                 l_vf = loss_func(new_state_values, batch_target.detach()).mean()
+                if l_clip.isnan().any():
+                    print(1)
+                if l_s.isnan().any():
+                    print(2)
+                if l_vf.isnan().any():
+                    print(3)
 
                 actor_optim.zero_grad()
                 critic_optim.zero_grad()
@@ -155,7 +159,8 @@ for epoch in range(NUM_EPOCHS):
                 critic_loss = l_vf * C1
                 actor_loss.backward()
                 critic_loss.backward()
-
+                torch.nn.utils.clip_grad_norm_(actor.parameters(), 0.5)
+                torch.nn.utils.clip_grad_norm_(critic.parameters(), 0.5)
                 actor_optim.step()
                 critic_optim.step()
 

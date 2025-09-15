@@ -38,8 +38,9 @@ class Actor(nn.Module):
         
         if not self.is_discrete:
             actions = self.action_range * torch.tanh(actions)
+            log_probs -= torch.log(self.action_range * (1 - (actions / self.action_range).pow(2) + 1e-6)).sum(dim=-1, keepdim=True)
 
-        return actions, log_probs
+        return actions, log_probs.sum(dim = -1, keepdim=True)
     
     def get_log_probs(self, state, action):
         x = self.head(state)
@@ -48,13 +49,16 @@ class Actor(nn.Module):
             x = layer(x)
             x = self.relu(x)
         x = self.tail(x)
-
+        action_clamped = torch.clamp(action / self.action_range, -1.0 + 1e-6, 1.0 - 1e-6)
+        action_pre_tanh = torch.atanh(action_clamped)
         if self.is_discrete:
             distribution = Categorical(logits = x)
         else:
             distribution = Normal(x[:,:self.action_dim], torch.exp(torch.clamp(x[:,self.action_dim:], self.clamp_min, self.clamp_max)))
 
-        return distribution.log_prob(action), distribution.entropy()
+        log_prob = distribution.log_prob(action_pre_tanh) - torch.log(self.action_range * (1 - action_clamped.pow(2) + 1e-6)).sum(dim=1, keepdim=True)
+
+        return log_prob.sum(dim = -1, keepdim=True), distribution.entropy()
     
 class Critic(nn.Module):
     def __init__(self, obs_dim, action_dim, hidden_layers = [128,128]):
