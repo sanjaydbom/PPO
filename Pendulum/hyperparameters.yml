@@ -1,0 +1,31 @@
+env_name: "Pendulum-v1"
+
+#Architecture Parameters
+actor_hidden: [128,256,128]
+std_clamp_min: -5
+std_clamp_max: 2
+
+critic_hidden: [128,256,128]
+
+actor_lr: 5e-4
+critic_lr: 5e-4
+
+#Training Parameters
+GAMMA: 0.99
+LAMBDA: 0.95
+
+EPSILON: 0.2
+C1: 0.5
+C2: 0.01
+
+NUM_EPOCHS: 3000
+BATCH_SIZE: 64
+NUM_BATCHES: 5
+TRAINING_MIN_SIZE: -1
+
+#LOGGING PARAMETERS
+LOGGING_FREQ: 10
+SLIDING_WINDOW_SIZE: 50
+MODEL_FILE_NAME: "./Pendulum/Pendulum"
+
+NUM_TESTS: 100
