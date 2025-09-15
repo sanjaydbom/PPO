@@ -22,7 +22,7 @@ if discrete:
     action_range = action_dim
 else:
     action_dim = env.action_space.shape[0]
-    action_range = env.action_space.high
+    action_range = torch.tensor(env.action_space.high)
 
 actor = Actor(obs_dim, action_dim, hyperparams['actor_hidden'], hyperparams['std_clamp_min'], hyperparams['std_clamp_max'], discrete, action_range)
 actor.load_state_dict(torch.load(agent_file, weights_only=True))
@@ -73,7 +73,7 @@ folder = agent_file.split('\\')[0]
 
 env.close()
 env = gym.make(hyperparams['env_name'], render_mode='rgb_array')
-env = RecordVideo(env, video_folder='CartPole', episode_trigger=lambda x: True)
+env = RecordVideo(env, video_folder='Pendulum', episode_trigger=lambda x: True)
 
 state, _ = env.reset()
 state = torch.tensor(state, dtype = torch.float32).unsqueeze(0)
