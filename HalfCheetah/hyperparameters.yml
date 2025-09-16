@@ -1,0 +1,36 @@
+env_name: "HalfCheetah-v5"
+
+#Architecture Parameters
+actor_hidden: [256,256]
+std_clamp_min: -5
+std_clamp_max: 2
+
+critic_hidden: [256,256]
+
+actor_lr: 3e-4
+critic_lr: 3e-4
+learning_rate_aneeling: False
+actor_lr_aneeling_rate: 0.9999
+critic_lr_aneeling_rate: 0.9999
+
+
+
+#Training Parameters
+GAMMA: 0.99
+LAMBDA: 0.95
+
+EPSILON: 0.20
+C1: 0.5
+C2: 0.01
+
+NUM_EPOCHS: 5000
+BATCH_SIZE: 256
+NUM_BATCHES: 15
+TRAINING_MIN_SIZE: 1024
+
+#LOGGING PARAMETERS
+LOGGING_FREQ: 100
+SLIDING_WINDOW_SIZE: 100
+MODEL_FILE_NAME: "./HalfCheetah/HalfCheetah"
+
+NUM_TESTS: 100

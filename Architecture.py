@@ -40,7 +40,10 @@ class Actor(nn.Module):
             actions = self.action_range * torch.tanh(actions)
             log_probs -= torch.log(self.action_range * (1 - (actions / self.action_range).pow(2) + 1e-6)).sum(dim=-1, keepdim=True)
 
-        return actions, log_probs.sum(dim = -1, keepdim=True)
+        if self.training:
+            return actions, log_probs.sum(dim = -1, keepdim=True)
+        else:
+            return actions
     
     def get_log_probs(self, state, action):
         x = self.head(state)

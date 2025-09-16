@@ -36,7 +36,7 @@ with torch.no_grad():
 
         rewards.append(0)
         while True:
-            action, log_prob = actor(state)
+            action = actor(state)
             next_state, reward, terminated, truncated, _ = env.step(np.asarray(action[0]))
             next_state = torch.tensor(next_state, dtype = torch.float32)
 
@@ -73,19 +73,19 @@ folder = agent_file.split('\\')[0]
 
 env.close()
 env = gym.make(hyperparams['env_name'], render_mode='rgb_array')
-env = RecordVideo(env, video_folder='Pendulum', episode_trigger=lambda x: True)
+env = RecordVideo(env, video_folder='HalfCheetah', episode_trigger=lambda x: True)
 
 state, _ = env.reset()
 state = torch.tensor(state, dtype = torch.float32).unsqueeze(0)
+with torch.no_grad():
+    while True:
+        action = actor(state)
+        next_state, reward, terminated, truncated, _ = env.step(np.asarray(action[0]))
+        next_state = torch.tensor(next_state, dtype = torch.float32)
 
-while True:
-    action, log_prob = actor(state)
-    next_state, reward, terminated, truncated, _ = env.step(np.asarray(action[0]))
-    next_state = torch.tensor(next_state, dtype = torch.float32)
+        state = next_state.unsqueeze(0)
 
-    state = next_state.unsqueeze(0)
-
-    if terminated or truncated:
-        break
+        if terminated or truncated:
+            break
 
 env.close()
